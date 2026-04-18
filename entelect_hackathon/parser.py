@@ -1,5 +1,5 @@
 import json
-from types import Car, Race, Segment, Track, LevelData
+from race_types import Car, Race, Segment, Track, LevelData
 
 def load_level(file_path: str) -> LevelData:
     with open(file_path, 'r') as f:
