@@ -1,0 +1,22 @@
+from level_loader import load_level
+from strategy_generator import generate_level3_strategy
+from simulator import simulate_race
+import json
+
+level = load_level("C:\\Users\\GontseM\\Documents\\GitHub\\entelect-hackathon\\entelect_hackathon\\levels\\level3.json", level_number=3)
+strategy = generate_level3_strategy(level)
+result = simulate_race(strategy, level)
+
+print("=" * 70)
+print("LEVEL 3 RACE RESULT")
+print("=" * 70)
+print(f"Total Time     : {result.total_time:.2f} seconds")
+print(f"Fuel Used      : {result.fuel_used:.2f} L")
+print(f"Crashes        : {result.crashes}")
+print(f"Reference      : {level.race.time_reference} seconds")
+print("=" * 70)
+
+with open("submission_level3.txt", "w") as f:
+    json.dump(strategy, f, indent=2)
+
+print("✅ submission_level3.txt created!")
