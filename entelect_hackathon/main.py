@@ -1,64 +1,49 @@
-import argparse
-import json
-import sys
-import os
-
-sys.path.insert(0, os.path.dirname(__file__))
-
-from level_loader import load_level
-from strategy_generator import generate_level1_strategy
-from simulator import simulate_race
-from telemetry import print_telemetry, compute_score
-
+from parser import load_level
+from scoring import calculate_score
 
 def main():
-    parser = argparse.ArgumentParser(description="Entelect Grand Prix — Level 1 Strategy Generator")
-    parser.add_argument("level_path", help="Path to the level JSON file")
-    parser.add_argument("--output", default="submission.txt", help="Output file for submission JSON")
-    parser.add_argument("--telemetry", action="store_true", help="Print lap-by-lap telemetry")
-    parser.add_argument("--score-only", action="store_true", help="Print score and exit")
-    args = parser.parse_args()
-
-    # ── Load level ────────────────────────────────────────────────────────────
-    print(f"Loading level: {args.level_path}", file=sys.stderr)
-    level = load_level(args.level_path)
-    print(f"  Race: {level.race.name}, {level.race.laps} laps", file=sys.stderr)
-    print(f"  Track: {len(level.segments)} segments", file=sys.stderr)
-
-    # ── Generate strategy ─────────────────────────────────────────────────────
-    print("Generating Level 1 strategy...", file=sys.stderr)
-    strategy = generate_level1_strategy(level)
-    tyre_compound = level.get_compound_for_id(strategy["initial_tyre_id"])
-    print(f"  Starting tyre: ID={strategy['initial_tyre_id']} ({tyre_compound})", file=sys.stderr)
-
-    # ── Simulate race ─────────────────────────────────────────────────────────
-    print("Simulating race...", file=sys.stderr)
-    result = simulate_race(strategy, level)
-
-    score = compute_score(result, level.race.time_reference)
-    print(f"\n  Total time : {result.total_time:.3f} s", file=sys.stderr)
-    print(f"  Fuel used  : {result.fuel_used:.3f} L", file=sys.stderr)
-    print(f"  Crashes    : {result.crashes}", file=sys.stderr)
-    print(f"  Blowouts   : {result.blowouts}", file=sys.stderr)
-    print(f"  Score      : {score:.0f}", file=sys.stderr)
-
-    if args.telemetry:
-        print_telemetry(result)
-
-    if args.score_only:
-        print(f"{score:.0f}")
-        return
-
-    # ── Write submission JSON ─────────────────────────────────────────────────
-    submission_json = json.dumps(strategy, indent=2)
-    output_path = args.output
-    with open(output_path, "w") as f:
-        f.write(submission_json)
-    print(f"\nSubmission written to: {output_path}", file=sys.stderr)
-
-    # Also print to stdout for piping
-    print(submission_json)
-
+    level = load_level("levels/level_1.json") //1. Load the level
+    
+    # 2. Get the strategy from Person B (for now, we'll hardcode)
+    #    Person B will replace this with their optimizer output
+    initial_tyre_id = 1
+    
+    laps_data = []
+    for lap_num in range(1, level.race.laps + 1):
+        laps_data.append({
+            "lap": lap_num,
+            "segments": [
+                {"id": 1, "type": "straight", "target_m/s": 90, "brake_start_m_before_next": 155.8},
+                {"id": 2, "type": "corner"},
+                {"id": 3, "type": "corner"},
+                {"id": 4, "type": "straight", "target_m/s": 90, "brake_start_m_before_next": 157.9},
+                {"id": 5, "type": "corner"},
+                {"id": 6, "type": "corner"},
+                {"id": 7, "type": "straight", "target_m/s": 90, "brake_start_m_before_next": 151.1},
+                {"id": 8, "type": "corner"},
+                {"id": 9, "type": "straight", "target_m/s": 90, "brake_start_m_before_next": 162.0},
+                {"id": 10, "type": "corner"},
+                {"id": 11, "type": "corner"},
+                {"id": 12, "type": "straight", "target_m/s": 90, "brake_start_m_before_next": 139.3},
+                {"id": 13, "type": "corner"},
+                {"id": 14, "type": "straight", "target_m/s": 90, "brake_start_m_before_next": 154.5},
+                {"id": 15, "type": "corner"}
+            ],
+            "pit": {"enter": False}
+        })
+    
+    # 3. Save the strategy (Person B will call this)
+    from strategy_writer import save_strategy
+    save_strategy(initial_tyre_id, laps_data, "submission.txt")
+    print("Strategy saved to submission.txt")
+    
+    # 4. Person A will run their simulator and give you total_time
+    #    For now, let's say Person A gives you:
+    total_time = 7300.0  # This will come from Person A's simulator
+    
+   
+    score = calculate_score(total_time, level.race.time_reference) // 5. Calculate score
+    print(f"Score: {score}")
 
 if __name__ == "__main__":
     main()
