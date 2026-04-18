@@ -2,6 +2,8 @@ from strategy import build_strategy
 from level_loader import load_level
 from simulator import simulate_race
 from scoring import calculate_score
+from strategy_writer import save_strategy
+
 
 def main():
     # Load level
@@ -9,7 +11,8 @@ def main():
 
     # Build strategy (Person B)
     strategy = build_strategy(level_data)
-
+    strategy: dict = build_strategy(level_data)
+    save_strategy(strategy["initial_tyre_id"], strategy["laps"], "submission.txt")
     # Run simulation (Person A)
     result = simulate_race(strategy, level_data)
 
