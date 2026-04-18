@@ -11,10 +11,7 @@ from utils import (
 )
 from level_loader import Level, WeatherCondition
 
-
-# =====================
-# DATA STRUCTURES
-# =====================
+//DATA STRUCTURE
 
 @dataclass
 class CarState:
@@ -67,17 +64,12 @@ class RaceResult:
     blowouts: int
 
 
-# =====================
-# WEATHER
-# =====================
+//WEATHER
 
 def _get_active_weather(state: CarState, level: Level) -> WeatherCondition:
     return get_weather(state.race_time, level.weather_conditions)
 
-
-# =====================
-# STRAIGHT
-# =====================
+//STRAIGHT
 
 def simulate_straight(seg, state: CarState, strat_seg: dict, weather, level: Level):
     new_state = state.copy()
@@ -104,7 +96,7 @@ def simulate_straight(seg, state: CarState, strat_seg: dict, weather, level: Lev
     target = min(strat_seg.get("target_m/s", max_speed), max_speed)
     brake_dist = strat_seg.get("brake_start_m_before_next", 0)
 
-    # ACCELERATION
+    //ACCELERATION
     if entry_speed >= target:
         v_peak = entry_speed
         d_accel = 0
@@ -152,10 +144,7 @@ def simulate_straight(seg, state: CarState, strat_seg: dict, weather, level: Lev
 
     return SegmentResult(seg.id, total_time, total_fuel, 0, entry_speed, v_exit, v_peak, False, False, False), new_state
 
-
-# =====================
-# CORNER
-# =====================
+//CORNER
 
 def simulate_corner(seg, state: CarState, weather, level: Level):
     new_state = state.copy()
@@ -181,7 +170,7 @@ def simulate_corner(seg, state: CarState, weather, level: Level):
 
     max_speed_corner = max_corner_speed(friction, seg.radius_m, crawl)
 
-    # CRASH
+    //CRASH
     if entry_speed > max_speed_corner:
         new_state.crash_count += 1
         new_state.race_time += level.race.corner_crash_penalty
@@ -202,10 +191,7 @@ def simulate_corner(seg, state: CarState, weather, level: Level):
 
     return SegmentResult(seg.id, t, f, 0, entry_speed, v, v, crashed, False, False), new_state
 
-
-# =====================
-# PIT
-# =====================
+// PIT
 
 def simulate_pit(pit_action: dict, state: CarState, level: Level):
     if not pit_action.get("enter", False):
@@ -232,10 +218,7 @@ def simulate_pit(pit_action: dict, state: CarState, level: Level):
 
     return new_state, pit_time
 
-
-# =====================
-# LAP
-# =====================
+//LAP
 
 def simulate_lap(lap_strategy, state, level):
     start_time = state.race_time
@@ -260,10 +243,7 @@ def simulate_lap(lap_strategy, state, level):
 
     return LapResult(lap_strategy["lap"], results, pit_time, lap_time), state
 
-
-# =====================
-# RACE
-# =====================
+//RACE
 
 def simulate_race(strategy, level: Level):
     state = CarState(
