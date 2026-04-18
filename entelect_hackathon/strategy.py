@@ -1,5 +1,6 @@
 import math
 
+
 def get_base_friction(compound):
     return {
         "Soft": 1.8,
@@ -14,18 +15,26 @@ def safe_corner_speed(radius, friction, crawl):
     return math.sqrt(friction * 9.8 * radius) + crawl
 
 
+def braking_distance(v_initial, v_target, brake_decel):
+    if v_initial <= v_target:
+        return 0.0
+    return (v_initial**2 - v_target**2) / (2 * brake_decel)
+
+
 def build_strategy(level_data):
     car = level_data.car
     track = level_data.segments
 
     max_speed = car.max_speed
-    brake = car.brake
+    brake_decel = car.brake
     crawl = car.crawl_speed
 
     tyre_id = 1
     compound = level_data.get_compound_for_id(tyre_id)
-
     friction = get_base_friction(compound)
+
+    safety_factor = 0.94      
+    brake_buffer = 1.12       
 
     laps = []
 
@@ -33,38 +42,40 @@ def build_strategy(level_data):
         segments = []
 
         for i, seg in enumerate(track):
-
             if seg.type == "straight":
                 next_seg = track[(i + 1) % len(track)]
 
                 if next_seg.type == "corner":
-                    corner_speed = safe_corner_speed(
-                        next_seg.radius_m,
-                        friction,
-                        crawl
-                    )
+                    corner_entry = safe_corner_speed(next_seg.radius_m, friction, crawl)
+                    target_entry = corner_entry * safety_factor
 
-                    target_speed = min(max_speed, corner_speed + 20)
-
-                    d_brake = (target_speed**2 - corner_speed**2) / (2 * brake)
-                    d_brake = max(0, min(d_brake, seg.length_m))
+                    # Calculate required braking distance
+                    d_brake = braking_distance(max_speed, target_entry, brake_decel)
+                    
+                    # Add safety buffer
+                    d_brake = d_brake * brake_buffer
+                    
+                    # Don't brake more than the straight length allows
+                    d_brake = min(d_brake, seg.length_m * 0.95)
 
                     segments.append({
                         "id": seg.id,
                         "type": "straight",
-                        "target_m/s": round(target_speed, 2),
+                        "target_m/s": round(max_speed, 2),
                         "brake_start_m_before_next": round(d_brake, 2)
                     })
 
                 else:
+                    # Straight to straight
                     segments.append({
                         "id": seg.id,
                         "type": "straight",
-                        "target_m/s": max_speed,
+                        "target_m/s": round(max_speed, 2),
                         "brake_start_m_before_next": 0
                     })
 
             else:
+                # Corner
                 segments.append({
                     "id": seg.id,
                     "type": "corner"
