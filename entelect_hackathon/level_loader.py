@@ -67,6 +67,7 @@ class Level:
     tyre_properties: Dict[str, TyreProperties]   # compound -> properties
     tyre_sets: List[TyreSet]
     weather_conditions: List[WeatherCondition]
+    level_number: int = 1   # 1=no tyre degradation, 2+=degradation active
 
     # ── lookup helpers ───────────────────────────────────────────────────────
 
@@ -97,7 +98,7 @@ class Level:
         return BASE_FRICTION[self.get_compound_for_id(tyre_id)]
 
 
-def load_level(path: str) -> Level:
+def load_level(path: str, level_number: int = 1) -> Level:
     with open(path) as f:
         d = json.load(f)
 
@@ -180,4 +181,5 @@ def load_level(path: str) -> Level:
         tyre_properties=tyre_properties,
         tyre_sets=tyre_sets,
         weather_conditions=weather_conditions,
+        level_number=level_number,
     )
